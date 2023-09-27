@@ -1,14 +1,22 @@
 # Etl Demo
 Demo app `EtlProviderApp.exe` pushing some example non-trivial trace events.
 
-TODO: Add info about ETL and motivation of this project
+The [Event Tracing for Windows (ETW)](https://learn.microsoft.com/en-us/windows-hardware/test/wpt/event-tracing-for-windows) enables the consistent, straightforward capture of kernel and application events for performance analysis and behavior analysis.
+[Windows Performance Analyzer (WPA)](https://learn.microsoft.com/en-us/windows-hardware/test/wpt/windows-performance-analyzer) presents the information that ETW collects in graphs and tables.
+[Windows Performance Recorder (WPR)](https://learn.microsoft.com/en-us/windows-hardware/test/wpt/windows-performance-recorder) records system and application events, writing event trace logs (ETL).
+
+This project is a small console application, emitting events.
+It can be used to reproduce specific setups in a small repeatable manner, to test further analysis tools.
 
 
 ## How-to Record an Event Trace
 
-TODO: Use WPR to record a trace
-TODO: Use EtlProviderApp.exe
-TODO: Use WPA to inspect the trace
+When you just run `EtlProviderApp.exe` it will print a couple of lines out to the console, and it will also write a couple of trace events.
+To record these trace events, you can use the [Windows Performance Recorder (WPR)](https://learn.microsoft.com/en-us/windows-hardware/test/wpt/windows-performance-recorder).
+
+You can start the recording using the provided profile file `etl-demo.wprp`.
+
+Run the Powershell script file [`record-wpr.ps1`](.\record-wpr.ps1) in an elevated shell to record an ETL file automatically.
 
 
 ## How-to Build EtlProviderApp

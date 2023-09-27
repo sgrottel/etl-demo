@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WindowsPerformanceRecorder Version="1.0">
+	<Profiles>
+		<EventCollector Id="EventCollector1" Name="EventCollector 1">
+			<BufferSize Value="128" />
+			<Buffers Value="64" />
+		</EventCollector>
+
+		<Profile Id="EtlDemo.Verbose.File" Name="EtlDemo" Description="EtlDemo" LoggingMode="File" DetailLevel="Verbose" Default="true">
+			<Collectors>
+				<EventCollectorId Value="EventCollector1">
+					<EventProviders>
+						<EventProvider Id="EtlProviderApp" Name="67272C9A-6D34-579C-9136-C7AFF6F4B00E" />
+					</EventProviders>
+				</EventCollectorId>
+			</Collectors>
+		</Profile>
+
+		<Profile Id="EtlDemo.Verbose.Memory" Name="EtlDemo" Description="EtlDemo" Base="EtlDemo.Verbose.File" LoggingMode="Memory" DetailLevel="Verbose" />
+
+	</Profiles>
+</WindowsPerformanceRecorder>
