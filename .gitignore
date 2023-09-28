@@ -3,3 +3,7 @@ EtlProviderApp/x64
 EtlProviderApp/EtlProviderApp.vcxproj.user
 EtlProviderApp/Debug
 EtlProviderApp/Release
+EtlDump/.vs
+EtlDump/bin
+EtlDump/obj
+EtlDump/Properties/launchSettings.json
