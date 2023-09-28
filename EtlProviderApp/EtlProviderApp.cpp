@@ -33,9 +33,9 @@ int main()
     std::cout << "Here we go\n";
 
     tracing::WriteEventInts(1, 15);
-    tracing::WriteEventInts(2, 27);
+    tracing::WriteEventInts2(2, 27);
     tracing::WriteEventIntAndStr(3, "woof?");
-    tracing::WriteEventInts(4, 42);
+    tracing::WriteEventInts3(4, 42);
     tracing::WriteEventIntAndStr(5, "woof!");
     tracing::WriteEventInts(6, 666);
     tracing::WriteEventIntsEvil(7, 79);
