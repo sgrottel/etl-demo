@@ -21,9 +21,15 @@
     <ClCompile Include="ProviderApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RealTimeConsumer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tracing.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RealTimeConsumer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

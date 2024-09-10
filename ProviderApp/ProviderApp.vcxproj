@@ -144,9 +144,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ProviderApp.cpp" />
+    <ClCompile Include="RealTimeConsumer.cpp" />
     <ClCompile Include="tracing.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="RealTimeConsumer.h" />
     <ClInclude Include="tracing.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

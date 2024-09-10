@@ -22,11 +22,14 @@
 // SOFTWARE.
 //
 #include "tracing.h"
+#include "RealTimeConsumer.h"
 
 #include <iostream>
 
 int main()
 {
+    RealTimeConsumer consumer;
+
     std::cout << "Setup\n";
     tracing::Setup();
 
