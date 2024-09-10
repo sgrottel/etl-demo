@@ -1,6 +1,9 @@
 #
 # Record ETL file with WPR
 #
+param(
+	[string]$appName = "MinimalApp.exe"
+)
 
 if (-Not (Get-Command wpr.exe -ErrorAction SilentlyContinue))
 {
@@ -9,10 +12,10 @@ if (-Not (Get-Command wpr.exe -ErrorAction SilentlyContinue))
 }
 
 $Env:Path += ";."
-$etldemo = (Get-Command EtlProviderApp.exe -ErrorAction SilentlyContinue)
+$etldemo = (Get-Command $appName -ErrorAction SilentlyContinue)
 if (-Not $etldemo)
 {
-	Write-Error "EtlProviderApp.exe not found. Please run this script from within one of the binary directories."
+	Write-Error "$appName not found. Please run this script from within one of the binary directories."
 	exit
 }
 

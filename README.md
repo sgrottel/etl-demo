@@ -1,17 +1,22 @@
 # Etl Demo
-Demo app `EtlProviderApp.exe` pushing some example non-trivial trace events.
+Demo app `ProviderApp.exe` pushing some example non-trivial trace events.
 
-The [Event Tracing for Windows (ETW)](https://learn.microsoft.com/en-us/windows-hardware/test/wpt/event-tracing-for-windows) enables the consistent, straightforward capture of kernel and application events for performance analysis and behavior analysis.
-[Windows Performance Analyzer (WPA)](https://learn.microsoft.com/en-us/windows-hardware/test/wpt/windows-performance-analyzer) presents the information that ETW collects in graphs and tables.
-[Windows Performance Recorder (WPR)](https://learn.microsoft.com/en-us/windows-hardware/test/wpt/windows-performance-recorder) records system and application events, writing event trace logs (ETL).
+### Projects
+- `EtlDump` - a minimal CSharp application to read a Windows Trace Logging (etl) file
+- `MinimalApp` - a minimal Cpp application emitting some trace events
+- `ProviderApp` - a Cpp application emitting some trace events, some with non-trivial payload configurations
 
-This project is a small console application, emitting events.
-It can be used to reproduce specific setups in a small repeatable manner, to test further analysis tools.
+### Further information
+- The [Event Tracing for Windows (ETW)](https://learn.microsoft.com/en-us/windows-hardware/test/wpt/event-tracing-for-windows) enables the consistent, straightforward capture of kernel and application events for performance analysis and behavior analysis.
+- [Windows Performance Analyzer (WPA)](https://learn.microsoft.com/en-us/windows-hardware/test/wpt/windows-performance-analyzer) presents the information that ETW collects in graphs and tables.
+- [Windows Performance Recorder (WPR)](https://learn.microsoft.com/en-us/windows-hardware/test/wpt/windows-performance-recorder) records system and application events, writing event trace logs (ETL).
+
+This project can be used to reproduce specific setups in a small repeatable manner, to test further analysis tools.
 
 
 ## How-to Record an Event Trace
 
-When you just run `EtlProviderApp.exe` it will print a couple of lines out to the console, and it will also write a couple of trace events.
+When you just run `ProviderApp.exe` it will print a couple of lines out to the console, and it will also write a couple of trace events.
 To record these trace events, you can use the [Windows Performance Recorder (WPR)](https://learn.microsoft.com/en-us/windows-hardware/test/wpt/windows-performance-recorder).
 
 You can start the recording using the provided profile file `etl-demo.wprp`.
@@ -19,21 +24,23 @@ You can start the recording using the provided profile file `etl-demo.wprp`.
 Run the Powershell script file [`record-wpr.ps1`](.\record-wpr.ps1) in an elevated shell to record an ETL file automatically.
 
 
-## How-to Build EtlProviderApp
-You need Visual Studio 2022 or newer, with the Desktop Cpp tools installed.
+## How-to Build
+You need Visual Studio 2022 or newer, with the Desktop CSharp tools and the Desktop Cpp tools installed.
 Community edition should work just fine.
 
-Open the solution `EtlProviderApp\EtlProviderApp.sln` in Visual Studio.
+Open the solution [`EtlDemo.sln`](.\EtlDemo.sln) in Visual Studio.
 
 You should be able to build the project right away.
 
-If you are having trouble, you might need to install a Windows SDK or adjust the respective parameters in the EtlProviderApp project settings.
+Restoring Nuget packets from some projects might need to be triggered explicitly if building fails.
+
+If you are having trouble, you might need to install a Windows SDK or adjust the respective parameters in the project settings.
 
 
 ## License
 This project is freely available as open source under the terms of the [MIT License](.\LICENSE)
 
-> Copyright (c) 2023 Sebastian Grottel
+> Copyright (c) 2023-2024 Sebastian Grottel
 > 
 > Permission is hereby granted, free of charge, to any person obtaining a copy
 > of this software and associated documentation files (the "Software"), to deal
