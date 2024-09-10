@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="EtlProviderApp.cpp">
+    <ClCompile Include="tracing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="tracing.cpp">
+    <ClCompile Include="ProviderApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
