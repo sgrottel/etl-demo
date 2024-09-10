@@ -2,7 +2,8 @@
 Demo app `ProviderApp.exe` pushing some example non-trivial trace events.
 
 ### Projects
-- `EtlDump` - a minimal CSharp application to read a Windows Trace Logging (etl) file.
+- `EtlDump` - a minimal CSharp application to read a Windows Trace Logging (etl) file
+- `MinimalApp` - a minimal Cpp application emitting some trace events
 - `ProviderApp` - a Cpp application emitting some trace events, some with non-trivial payload configurations
 
 ### Further information
