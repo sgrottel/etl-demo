@@ -7,6 +7,7 @@
 #include <tdh.h>
 
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <cassert>
 
@@ -66,7 +67,28 @@ void MyTraceEventObserver(PEVENT_RECORD er)
 		return;
 	}
 
-	std::cout << "Received `WriteEventInts`:";
+	uint64_t timestamp = er->EventHeader.TimeStamp.QuadPart; // system time code is x100us since midnight 1th Jan. 1601
+
+	const uint32_t timestamp_ns = 100 * (timestamp % 10);
+	timestamp /= 10;
+	const uint32_t timestamp_us = (timestamp % 1000);
+	timestamp /= 1000;
+	const uint32_t timestamp_ms = (timestamp % 1000);
+	timestamp /= 1000;
+	const uint32_t timestamp_sec = (timestamp % 60);
+	timestamp /= 60;
+	const uint32_t timestamp_min = (timestamp % 60);
+	timestamp /= 60;
+	const uint32_t timestamp_h = (timestamp % 24);
+	timestamp /= 24;
+	// rest `timestamp` is days
+
+	std::cout << "Received `WriteEventInts` [" << timestamp_h << ":"
+		<< std::setw(2) << std::setfill('0') << timestamp_min << ":"
+		<< std::setw(2) << timestamp_sec << "."
+		<< std::setw(3) << timestamp_ms << "_"
+		<< std::setw(3) << timestamp_us << "_"
+		<< std::setw(3) << timestamp_ns << "]: ";
 
 	uint8_t* data = static_cast<uint8_t*>(er->UserData);
 	uint32_t dataLen = er->UserDataLength;
