@@ -28,7 +28,9 @@
 
 int main()
 {
-    RealTimeConsumer consumer;
+    RealTimeConsumer consumer{ L"EtlDemoProviderAppTraceSession" };
+    consumer.EnableTraceProviderCapture({ 0x67272c9a, 0x6d34, 0x579c, 0x91, 0x36, 0xc7, 0xaf, 0xf6, 0xf4, 0xb0, 0x0e });
+    consumer.SetOnTraceEventCallback([](auto _) { std::cout << "Trace Event !" << std::endl; });
 
     std::cout << "Setup\n";
     tracing::Setup();
