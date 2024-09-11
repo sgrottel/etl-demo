@@ -22,11 +22,17 @@
 // SOFTWARE.
 //
 #include "tracing.h"
+#include "RealTimeConsumer.h"
+#include "MyTraceEventObserver.h"
 
 #include <iostream>
 
 int main()
 {
+    RealTimeConsumer consumer{ L"EtlDemoProviderAppTraceSession" };
+    consumer.EnableTraceProviderCapture({ 0x67272c9a, 0x6d34, 0x579c, 0x91, 0x36, 0xc7, 0xaf, 0xf6, 0xf4, 0xb0, 0x0e });
+    consumer.SetOnTraceEventCallback(MyTraceEventObserver);
+
     std::cout << "Setup\n";
     tracing::Setup();
 
