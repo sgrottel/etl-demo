@@ -13,15 +13,7 @@
 #include <vector>
 #include <thread>
 
-namespace
-{
-	struct AccessibleData
-	{
-		std::function<void(PEVENT_RECORD)> onTraceEvent;
-	};
-}
-
-struct RealTimeConsumer::Data : public AccessibleData
+struct RealTimeConsumer::Data
 {
 	std::vector<uint8_t> sessionPropertiesBuffer;
 	EVENT_TRACE_PROPERTIES* sessionProperties = nullptr;
@@ -32,16 +24,15 @@ struct RealTimeConsumer::Data : public AccessibleData
 	EVENT_TRACE_LOGFILEW traceLog{};
 	TRACEHANDLE hprocess = INVALID_PROCESSTRACE_HANDLE;
 	std::thread hprocessWorker;
-};
 
-namespace
-{
-	void WINAPI OnTraceEvent(PEVENT_RECORD EventRecord)
+	std::function<void(PEVENT_RECORD)> onTraceEvent;
+
+	static void WINAPI OnTraceEvent(PEVENT_RECORD EventRecord)
 	{
-		auto cb = static_cast<AccessibleData*>(EventRecord->UserContext)->onTraceEvent;
+		auto cb = static_cast<RealTimeConsumer::Data*>(EventRecord->UserContext)->onTraceEvent;
 		if (cb) { cb(EventRecord); }
 	}
-}
+};
 
 RealTimeConsumer::RealTimeConsumer(const wchar_t* sessionName)
 	: m_data{ std::make_unique<Data>() }
@@ -85,11 +76,10 @@ RealTimeConsumer::RealTimeConsumer(const wchar_t* sessionName)
 		return;
 	}
 
-
 	m_data->traceLog.LogFileName = nullptr;
 	m_data->traceLog.LoggerName = const_cast<wchar_t*>(m_data->sessionName.c_str());
 	m_data->traceLog.ProcessTraceMode = PROCESS_TRACE_MODE_EVENT_RECORD | PROCESS_TRACE_MODE_REAL_TIME;
-	m_data->traceLog.EventRecordCallback = &OnTraceEvent;
+	m_data->traceLog.EventRecordCallback = &Data::OnTraceEvent;
 	m_data->traceLog.Context = static_cast<void*>(m_data.get());
 
 	m_data->hprocess = OpenTraceW(&m_data->traceLog);
@@ -119,8 +109,9 @@ RealTimeConsumer::RealTimeConsumer(const wchar_t* sessionName)
 		}
 	};
 
-	// TODO: wait for ProcessTrace being started, before exiting
-	Sleep(100);
+	// Wait for ProcessTrace being started, before continuing here
+	// In this trivial example, otherwise `ProcessTrace` could be called after we already reached the dtor, which closes the trace session.
+	Sleep(10);
 }
 
 RealTimeConsumer::~RealTimeConsumer()
