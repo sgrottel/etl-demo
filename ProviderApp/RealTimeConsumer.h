@@ -10,11 +10,10 @@ class RealTimeConsumer
 {
 public:
 	RealTimeConsumer(const wchar_t* sessionName);
-	RealTimeConsumer(const RealTimeConsumer&) = delete;
-	RealTimeConsumer(RealTimeConsumer&&) = delete;
 	~RealTimeConsumer();
+
+	RealTimeConsumer(const RealTimeConsumer&) = delete;
 	RealTimeConsumer& operator=(const RealTimeConsumer&) = delete;
-	RealTimeConsumer& operator=(RealTimeConsumer&&) = delete;
 
 	bool EnableTraceProviderCapture(GUID const& guid);
 

@@ -72,7 +72,7 @@ RealTimeConsumer::RealTimeConsumer(const wchar_t* sessionName)
 	ULONG resl = StartTraceW(&m_data->handle, m_data->sessionName.c_str(), m_data->sessionProperties);
 	if (resl != ERROR_SUCCESS)
 	{
-		std::cerr << "Failed to start real-time, in-process trace session: " << resl << std::endl;
+		std::cerr << "Failed to start real-time trace session: " << resl << std::endl;
 		return;
 	}
 
@@ -121,7 +121,7 @@ RealTimeConsumer::~RealTimeConsumer()
 		ULONG resl = ControlTraceW(m_data->handle, m_data->sessionName.c_str(), m_data->sessionProperties, EVENT_TRACE_CONTROL_STOP);
 		if (resl != ERROR_SUCCESS)
 		{
-			std::cerr << "Failed to stop real-time, in-process trace session: " << resl << std::endl;
+			std::cerr << "Failed to stop real-time session: " << resl << std::endl;
 			return;
 		}
 	}
