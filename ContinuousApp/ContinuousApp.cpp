@@ -8,11 +8,14 @@
 #include <Windows.h>
 
 #include <conio.h>
+#include <evntprov.h>
+#include <evntrace.h>
 #include <TraceLoggingProvider.h>
 
 #include <array>
 #include <chrono>
 #include <iostream>
+#include <mutex>
 #include <random>
 
 // declare can happen in a header, if you need this provider variable in multiple build units
@@ -57,12 +60,76 @@ namespace
             );
     }
 
+    std::mutex coutMutex;
+
+    void TraceEnableCallback(
+        LPCGUID SourceId,
+        ULONG IsEnabled,
+        UCHAR Level,
+        ULONGLONG MatchAnyKeyword,
+        ULONGLONG MatchAllKeyword,
+        PEVENT_FILTER_DESCRIPTOR FilterData,
+        PVOID CallbackContext
+    )
+    {
+        // unused params:
+        (SourceId);         // GUID specified by the caller that is enabling or disabling the provider.
+        (Level);            // The verbosity level this provider should write messages at
+        (MatchAnyKeyword);  // A bitmask value that specifies categories of events that the provider should write.
+        (MatchAllKeyword);  // A bitmask value that specifies categories of events that the provider should write.
+        (FilterData);       // A pointer to one EVENT_FILTER_DESCRIPTOR with filter data for the event provider.
+        (CallbackContext);  // Context for the callback specified below in `TraceLoggingRegisterEx` (third param)
+
+        switch (IsEnabled)
+        {
+        case EVENT_CONTROL_CODE_DISABLE_PROVIDER:
+            // No sessions have enabled the provider.
+            // aka: the last session has stopped listening.
+        {
+            std::scoped_lock<std::mutex> lock(coutMutex);
+            std::cout << "# Event Provider DISABLE" << std::endl;
+        }
+            break;
+
+        case EVENT_CONTROL_CODE_ENABLE_PROVIDER:
+            // One or more sessions have enabled the provider.
+            // aka: at least one new session is listening, but other sessions might have already listened before
+        {
+            std::scoped_lock<std::mutex> lock(coutMutex);
+            std::cout << "# Event Provider ENABLE" << std::endl;
+        }
+        break;
+
+        case EVENT_CONTROL_CODE_CAPTURE_STATE:
+            // A session is requesting that the provider log its state information.
+            // The provider will typically respond by writing events containing provider state.
+        {
+            std::scoped_lock<std::mutex> lock(coutMutex);
+            std::cout << "# Event Provider CAPTURE STATE" << std::endl;
+        }
+        break;
+
+        default:
+        {
+            std::scoped_lock<std::mutex> lock(coutMutex);
+            std::cout << "# ERROR unexpected value for `IsEnabled`in Event Provider callback: " << IsEnabled << std::endl;
+        }
+        break;
+
+        }
+    }
+
 }
 
 int main()
 {
-    std::cout << "Rolling Dice...\n"
-        << "Press any key to leave.\n" << std::endl;
+    TraceLoggingRegisterEx(g_traceloggingProvider, &TraceEnableCallback, nullptr);
+
+    {
+        std::scoped_lock<std::mutex> lock(coutMutex);
+        std::cout << "Rolling Dice...\n"
+            << "Press any key to leave.\n" << std::endl;
+    }
 
     TraceMessage("Start");
 
@@ -90,22 +157,29 @@ int main()
         {
             nextReport = now + reportInterval;
 
-            std::cout << "Dice stats."
-                << "  1: " << counter[0]
-                << "  2: " << counter[1]
-                << "  3: " << counter[2]
-                << "  4: " << counter[3]
-                << "  5: " << counter[4]
-                << "  6: " << counter[5]
-                << std::endl;
+            {
+                std::scoped_lock<std::mutex> lock(coutMutex);
+                std::cout << "Dice stats."
+                    << "  1: " << counter[0]
+                    << "  2: " << counter[1]
+                    << "  3: " << counter[2]
+                    << "  4: " << counter[3]
+                    << "  5: " << counter[4]
+                    << "  6: " << counter[5]
+                    << std::endl;
+            }
 
             TraceDiceStats(counter);
         }
     }
 
-    std::cout << "\nbye." << std::endl;
+    {
+        std::scoped_lock<std::mutex> lock(coutMutex);
+        std::cout << "\nbye." << std::endl;
+    }
 
     TraceMessage("End");
 
+    TraceLoggingUnregister(g_traceloggingProvider);
     return 0;
 }
