@@ -1,4 +1,5 @@
-// MinimalApp.cpp : This file contains the 'main' function. Program execution begins and ends there.
+// MinimalApp
+// Minimal example app on how to emit self-describing ETL events
 //
 
 #define VC_EXTRALEAN
