@@ -5,6 +5,7 @@ Demo app `ProviderApp.exe` pushing some example non-trivial trace events.
 
 ## Projects
 
+- `ContinuousApp` - a Cpp application continuously rolling a die and emitting trace events for each roll and periodic statistics until a key is pressed
 - `DemoAppCS` - a minimal CSharp application emitting some trace events
 - `EtlDump` - a minimal CSharp application to read a Windows Trace Logging (etl) file
 - `MinimalApp` - a minimal Cpp application emitting some trace events
@@ -32,7 +33,7 @@ Run the Powershell script file [`record-wpr.ps1`](.\record-wpr.ps1) in an elevat
 
 ## How-to Build
 
-You need Visual Studio 2022 or newer, with the Desktop CSharp tools and the Desktop Cpp tools installed.
+You need Visual Studio 2026 or newer, with the Desktop CSharp tools and the Desktop Cpp tools (MSVC v145) installed.
 Community edition should work just fine.
 
 Open the solution [`EtlDemo.sln`](.\EtlDemo.sln) in Visual Studio.
@@ -48,7 +49,7 @@ If you are having trouble, you might need to install a Windows SDK or adjust the
 
 This project is freely available as open source under the terms of the [MIT License](.\LICENSE)
 
-> Copyright (c) 2023-2025 Sebastian Grottel
+> Copyright (c) 2023-2026 Sebastian Grottel
 > 
 > Permission is hereby granted, free of charge, to any person obtaining a copy
 > of this software and associated documentation files (the "Software"), to deal

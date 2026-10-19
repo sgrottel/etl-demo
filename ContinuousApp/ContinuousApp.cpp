@@ -62,7 +62,7 @@ namespace
 
     std::mutex coutMutex;
 
-    void TraceEnableCallback(
+    void WINAPI TraceEnableCallback(
         LPCGUID SourceId,
         ULONG IsEnabled,
         UCHAR Level,
