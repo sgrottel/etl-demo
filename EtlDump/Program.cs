@@ -9,6 +9,8 @@ namespace EtlDump
         {
             using (var source = new ETWTraceEventSource(@"etl-demo.etl"))
             {
+                source.DispatchBehavior = TraceEventSourceDispatchBehavior.FetchTaskIDFromEventStream;
+
                 // setup the callbacks
                 source.Dynamic.All += (TraceEvent ev) => {
                     if (ev.ProviderName != "EtlProviderApp") return;
