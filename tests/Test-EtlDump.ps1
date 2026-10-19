@@ -23,9 +23,20 @@ $nativeEvents = foreach ($pair in @(@(1, 5), @(1, 2), @(6, 5), @(3, 2), @(3, 4),
 {
     "WriteEventInts -- ( 'i1': '$($pair[0])' (System.Int32) 'i2': '$($pair[1])' (System.Int32) ) -- Task: '0'"
 }
+$providerEvents = @(
+    "WriteEventInts -- ( 'i1': '1' (System.Int32) 'i2': '15' (System.Int32) ) -- Task: '0'"
+    "WriteEventInts -- ( 'i1': '2' (System.Int32) 'i2': '27' (System.Int32) ) -- Task: '0'"
+    "WriteEventIntAndStr -- ( 'i1': '3' (System.Int32) 'str': 'woof?' (System.String) ) -- Task: '0'"
+    "WriteEventInts -- ( 'i1': '4' (System.Int32) 'i2': '42' (System.Int32) ) -- Task: '1'"
+    "WriteEventIntAndStr -- ( 'i1': '5' (System.Int32) 'str': 'woof!' (System.String) ) -- Task: '0'"
+    "WriteEventInts -- ( 'i1': '6' (System.Int32) 'i2': '666' (System.Int32) ) -- Task: '0'"
+    "WriteEventInts -- ( 'f': '$(([single]4.2).ToString())' (System.Single) 'i1': '7' (System.Int64) 'i2': '79' (System.Int64) ) -- Task: '0'"
+    "WriteEventInts -- ( 'i1': '8' (System.Int32) 'i2': '8015' (System.Int32) ) -- Task: '0'"
+)
 $fixtures = [ordered]@{
     'DemoAppCS.etl' = $managedEvents
     'MinimalApp.etl' = $nativeEvents
+    'ProviderApp.etl' = $providerEvents
 }
 
 $directory = Join-Path ([IO.Path]::GetTempPath()) ('EtlDumpTest-' + [guid]::NewGuid().ToString('N'))

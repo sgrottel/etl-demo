@@ -47,7 +47,6 @@ $check = {
         Assert-Trace (@($events -match $pattern).Count -eq 1) "Missing or invalid integer pair ($($pair -join ', '))."
     }
 
-    Assert-Trace (@($events -match "'i1': '4' .* -- Task: '1'$").Count -eq 1) 'Missing the manually constructed Task 1 event.'
     Assert-Trace (@($events -match "'f': '4[.,]2' \(System.Single\) 'i1': '7' \(System.Int64\) 'i2': '79' \(System.Int64\)").Count -eq 1) `
         'The alternate schema sharing the WriteEventInts name was not decoded correctly.'
 
@@ -55,6 +54,19 @@ $check = {
     Assert-Trace ($strings.Count -eq 2) "Expected 2 integer/string events, got $($strings.Count)."
     Assert-Trace ($strings[0] -match "'i1': '3' \(System.Int32\) 'str': 'woof\?' \(System.String\)") 'Invalid first integer/string payload.'
     Assert-Trace ($strings[1] -match "'i1': '5' \(System.Int32\) 'str': 'woof!' \(System.String\)") 'Invalid second integer/string payload.'
+
+    $orderedEvents = @($Output -split '\r?\n' | Where-Object { $_ -match '^WriteEvent(?:Ints|IntAndStr) -- \(' })
+    Assert-Trace ($orderedEvents.Count -eq 8) "Expected 8 provider events, got $($orderedEvents.Count)."
+
+    for ($index = 0; $index -lt 8; $index++)
+    {
+        $value = $index + 1
+        Assert-Trace ($orderedEvents[$index] -match "'i1': '$value' \(System.Int(?:32|64)\)") `
+            "Provider events are out of order at event $value."
+        $expectedTask = if ($value -eq 4) { 1 } else { 0 }
+        Assert-Trace ($orderedEvents[$index] -match " -- Task: '$expectedTask'$") `
+            "Expected EtlDump to report Task $expectedTask for provider event ${value}: $($orderedEvents[$index])"
+    }
 }
 
 Invoke-TraceTest -AppPath $AppPath -EtlDumpPath $EtlDumpPath -Check $check
