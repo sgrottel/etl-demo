@@ -5,6 +5,7 @@ Demo app `ProviderApp.exe` pushing some example non-trivial trace events.
 
 ## Projects
 
+- `ContinuousApp` - a Cpp application continuously rolling a die and emitting trace events for each roll and periodic statistics until a key is pressed
 - `DemoAppCS` - a minimal CSharp application emitting some trace events
 - `EtlDump` - a minimal CSharp application to read a Windows Trace Logging (etl) file
 - `MinimalApp` - a minimal Cpp application emitting some trace events
