@@ -33,7 +33,7 @@ Run the Powershell script file [`record-wpr.ps1`](.\record-wpr.ps1) in an elevat
 
 ## How-to Build
 
-You need Visual Studio 2022 or newer, with the Desktop CSharp tools and the Desktop Cpp tools installed.
+You need Visual Studio 2026 or newer, with the Desktop CSharp tools and the Desktop Cpp tools (MSVC v145) installed.
 Community edition should work just fine.
 
 Open the solution [`EtlDemo.sln`](.\EtlDemo.sln) in Visual Studio.
