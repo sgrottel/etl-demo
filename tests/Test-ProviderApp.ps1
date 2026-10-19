@@ -8,7 +8,7 @@ param(
 . "$PSScriptRoot\Common.ps1"
 
 $check = {
-    param([string]$Output, [string]$AppOutput)
+    param([string]$Output, [string]$AppOutput, [hashtable]$TraceState)
 
     $lines = @($AppOutput -split '\r?\n' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
     $previousIndex = -1
@@ -57,6 +57,26 @@ $check = {
 
     $orderedEvents = @($Output -split '\r?\n' | Where-Object { $_ -match '^WriteEvent(?:Ints|IntAndStr) -- \(' })
     Assert-Trace ($orderedEvents.Count -eq 8) "Expected 8 provider events, got $($orderedEvents.Count)."
+
+    $rawEvents = @(Get-WinEvent -Path $TraceState.TracePath -Oldest |
+        Where-Object { $_.ProviderId -eq [guid]'67272c9a-6d34-579c-9136-c7aff6f4b00e' })
+    try
+    {
+        Assert-Trace ($rawEvents.Count -eq 8) "Expected 8 raw provider events, got $($rawEvents.Count)."
+        for ($index = 0; $index -lt 8; $index++)
+        {
+            $expectedTask = if ($index -eq 3) { 1 } else { 0 }
+            Assert-Trace ($rawEvents[$index].Task -eq $expectedTask) `
+                "Expected raw Task $expectedTask for provider event $($index + 1), got $($rawEvents[$index].Task)."
+        }
+    }
+    finally
+    {
+        foreach ($event in $rawEvents)
+        {
+            $event.Dispose()
+        }
+    }
 
     for ($index = 0; $index -lt 8; $index++)
     {

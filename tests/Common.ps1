@@ -156,6 +156,7 @@ function Invoke-TraceTest
     New-Item -ItemType Directory -Path $directory | Out-Null
     $traceState = @{ Started = $false }
     $tracePath = Join-Path $directory 'etl-demo.etl'
+    $traceState.TracePath = $tracePath
     $appStdoutPath = Join-Path $directory 'app.stdout.txt'
     $startTrace = {
         Invoke-WprCommand $wpr @('-start', $profile, '-filemode', '-instancename', $instance)
