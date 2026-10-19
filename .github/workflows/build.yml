@@ -1,4 +1,4 @@
-name: Build
+name: Build and test
 
 on:
   push:
@@ -9,16 +9,19 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: pwsh
+
 jobs:
-  cpp:
-    name: C++ / ${{ matrix.architecture }} / ${{ matrix.configuration }}
+  build-cpp-x86-debug:
+    name: C++ / x86 / Debug
     runs-on: windows-2025-vs2026
-    strategy:
-      fail-fast: false
-      matrix:
-        architecture: [x86, x64]
-        configuration: [Debug, Release]
-    steps:
+    env:
+      ARCHITECTURE: x86
+      BINARY_PLATFORM: Win32
+      CONFIGURATION: Debug
+    steps: &build-cpp
       - uses: actions/checkout@v7
 
       - name: Set up MSBuild
@@ -31,17 +34,50 @@ jobs:
         run: >-
           msbuild EtlDemo.sln /m /nologo /verbosity:minimal
           "/t:MinimalApp;ContinuousApp;ProviderApp"
-          /p:Configuration=${{ matrix.configuration }}
-          /p:Platform=${{ matrix.architecture }}
+          /p:Configuration=${{ env.CONFIGURATION }}
+          /p:Platform=${{ env.ARCHITECTURE }}
 
-  csharp:
-    name: C# / Any CPU / ${{ matrix.configuration }}
+      - name: Transfer C++ binaries to tests
+        uses: actions/upload-artifact@v7
+        with:
+          name: cpp-${{ env.ARCHITECTURE }}-${{ env.CONFIGURATION }}
+          path: bin\${{ env.BINARY_PLATFORM }}\${{ env.CONFIGURATION }}
+          if-no-files-found: error
+          retention-days: 1
+
+  build-cpp-x86-release:
+    name: C++ / x86 / Release
     runs-on: windows-2025-vs2026
-    strategy:
-      fail-fast: false
-      matrix:
-        configuration: [Debug, Release]
-    steps:
+    env:
+      ARCHITECTURE: x86
+      BINARY_PLATFORM: Win32
+      CONFIGURATION: Release
+    steps: *build-cpp
+
+  build-cpp-x64-debug:
+    name: C++ / x64 / Debug
+    runs-on: windows-2025-vs2026
+    env:
+      ARCHITECTURE: x64
+      BINARY_PLATFORM: x64
+      CONFIGURATION: Debug
+    steps: *build-cpp
+
+  build-cpp-x64-release:
+    name: C++ / x64 / Release
+    runs-on: windows-2025-vs2026
+    env:
+      ARCHITECTURE: x64
+      BINARY_PLATFORM: x64
+      CONFIGURATION: Release
+    steps: *build-cpp
+
+  build-csharp-debug:
+    name: C# / Any CPU / Debug
+    runs-on: windows-2025-vs2026
+    env:
+      CONFIGURATION: Debug
+    steps: &build-csharp
       - uses: actions/checkout@v7
 
       - name: Set up .NET
@@ -50,7 +86,149 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Build DemoAppCS
-        run: dotnet build DemoAppCS\DemoAppCS.csproj --configuration ${{ matrix.configuration }} --nologo
+        run: dotnet build DemoAppCS\DemoAppCS.csproj --configuration ${{ env.CONFIGURATION }} --nologo
 
       - name: Build EtlDump
-        run: dotnet build EtlDump\EtlDump.csproj --configuration ${{ matrix.configuration }} --nologo
+        run: dotnet build EtlDump\EtlDump.csproj --configuration ${{ env.CONFIGURATION }} --nologo
+
+      - name: Transfer C# binaries to tests
+        uses: actions/upload-artifact@v7
+        with:
+          name: csharp-${{ env.CONFIGURATION }}
+          path: |
+            DemoAppCS\bin\${{ env.CONFIGURATION }}\net10.0
+            EtlDump\bin\${{ env.CONFIGURATION }}\net10.0
+          if-no-files-found: error
+          retention-days: 1
+
+  build-csharp-release:
+    name: C# / Any CPU / Release
+    runs-on: windows-2025-vs2026
+    env:
+      CONFIGURATION: Release
+    steps: *build-csharp
+
+  test-cpp-x86-debug:
+    name: Test C++ / x86 / Debug
+    needs: [build-cpp-x86-debug, build-csharp-debug]
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 15
+    env:
+      ARCHITECTURE: x86
+      CONFIGURATION: Debug
+    steps: &test-cpp
+      - uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Download C++ binaries
+        id: native
+        uses: actions/download-artifact@v8
+        with:
+          name: cpp-${{ env.ARCHITECTURE }}-${{ env.CONFIGURATION }}
+          path: native
+
+      - name: Download matching C# binaries
+        id: managed
+        uses: actions/download-artifact@v8
+        with:
+          name: csharp-${{ env.CONFIGURATION }}
+
+      - name: Test MinimalApp
+        if: &test-cpp-ready ${{ !cancelled() && steps.native.outcome == 'success' && steps.managed.outcome == 'success' }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & .\tests\Test-MinimalApp.ps1 -AppPath .\native\MinimalApp.exe -EtlDumpPath .\EtlDump\bin\${{ env.CONFIGURATION }}\net10.0\EtlDump.exe
+
+      - name: Test ProviderApp
+        if: *test-cpp-ready
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & .\tests\Test-ProviderApp.ps1 -AppPath .\native\ProviderApp.exe -EtlDumpPath .\EtlDump\bin\${{ env.CONFIGURATION }}\net10.0\EtlDump.exe
+
+      - name: Test ContinuousApp
+        if: *test-cpp-ready
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & .\tests\Test-ContinuousApp.ps1 -AppPath .\native\ContinuousApp.exe -EtlDumpPath .\EtlDump\bin\${{ env.CONFIGURATION }}\net10.0\EtlDump.exe
+
+      - name: Test ContinuousApp with late tracing
+        if: *test-cpp-ready
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & .\tests\Test-ContinuousApp-LateTrace.ps1 -AppPath .\native\ContinuousApp.exe -EtlDumpPath .\EtlDump\bin\${{ env.CONFIGURATION }}\net10.0\EtlDump.exe
+
+  test-cpp-x86-release:
+    name: Test C++ / x86 / Release
+    needs: [build-cpp-x86-release, build-csharp-release]
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 15
+    env:
+      ARCHITECTURE: x86
+      CONFIGURATION: Release
+    steps: *test-cpp
+
+  test-cpp-x64-debug:
+    name: Test C++ / x64 / Debug
+    needs: [build-cpp-x64-debug, build-csharp-debug]
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 15
+    env:
+      ARCHITECTURE: x64
+      CONFIGURATION: Debug
+    steps: *test-cpp
+
+  test-cpp-x64-release:
+    name: Test C++ / x64 / Release
+    needs: [build-cpp-x64-release, build-csharp-release]
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 15
+    env:
+      ARCHITECTURE: x64
+      CONFIGURATION: Release
+    steps: *test-cpp
+
+  test-csharp-debug:
+    name: Test C# / Any CPU / Debug
+    needs: [build-csharp-debug]
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 15
+    env:
+      CONFIGURATION: Debug
+    steps: &test-csharp
+      - uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Download C# binaries
+        id: managed
+        uses: actions/download-artifact@v8
+        with:
+          name: csharp-${{ env.CONFIGURATION }}
+
+      - name: Test DemoAppCS
+        if: &test-csharp-ready ${{ !cancelled() && steps.managed.outcome == 'success' }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & .\tests\Test-DemoAppCS.ps1 -AppPath .\DemoAppCS\bin\${{ env.CONFIGURATION }}\net10.0\DemoAppCS.exe -EtlDumpPath .\EtlDump\bin\${{ env.CONFIGURATION }}\net10.0\EtlDump.exe
+
+      - name: Test EtlDump
+        if: *test-csharp-ready
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & .\tests\Test-EtlDump.ps1 -EtlDumpPath .\EtlDump\bin\${{ env.CONFIGURATION }}\net10.0\EtlDump.exe
+
+  test-csharp-release:
+    name: Test C# / Any CPU / Release
+    needs: [build-csharp-release]
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 15
+    env:
+      CONFIGURATION: Release
+    steps: *test-csharp

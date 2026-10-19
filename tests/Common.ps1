@@ -149,7 +149,7 @@ function Invoke-TraceTest
         throw 'ETW capture requires an elevated PowerShell session. Run this test as administrator.'
     }
 
-    $wpr = (Get-Command wpr.exe -CommandType Application).Source
+    $wpr = (Get-Command wpr.exe -CommandType Application | Select-Object -First 1).Source
     $profile = Join-Path (Split-Path $PSScriptRoot -Parent) 'etl-demo.wprp'
     $instance = 'EtlDemoTest-' + [guid]::NewGuid().ToString('N')
     $directory = Join-Path ([IO.Path]::GetTempPath()) $instance
