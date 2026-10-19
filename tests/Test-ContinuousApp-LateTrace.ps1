@@ -36,7 +36,7 @@ $check = {
             $current = @(0L, 0L, 0L, 0L, 0L, 0L)
             for ($die = 1; $die -le 6; $die++)
             {
-                Assert-Trace ($event -match "'D$die': '([0-9]+)' \(System.UInt32\)") "Missing or invalid counter D$die."
+                Assert-Trace ($event -match "'D$die': '([0-9]+)' \(System.Int32\)") "Missing or invalid counter D$die."
                 $current[$die - 1] = [long]$Matches[1]
                 if ($null -ne $previous)
                 {

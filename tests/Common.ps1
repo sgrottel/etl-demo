@@ -281,12 +281,13 @@ function Assert-ContinuousConsoleOutput
 
     $firstIndex = -1
     $lastIndex = -1
+    # TraceEvent currently exposes the UINT32 counters as Int32.
     foreach ($event in @(Get-TraceEvents $TraceOutput 'DiceStats'))
     {
         $current = @(0L, 0L, 0L, 0L, 0L, 0L)
         for ($die = 1; $die -le 6; $die++)
         {
-            Assert-Trace ($event -match "'D$die': '([0-9]+)' \(System.UInt32\)") "Invalid trace counter D$die."
+            Assert-Trace ($event -match "'D$die': '([0-9]+)' \(System.Int32\)") "Invalid trace counter D$die."
             $current[$die - 1] = [long]$Matches[1]
         }
         $index = $consoleStats.IndexOf(($current -join ','))

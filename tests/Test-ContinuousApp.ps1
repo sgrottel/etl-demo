@@ -30,7 +30,7 @@ $check = {
     $total = 0
     for ($die = 1; $die -le 6; $die++)
     {
-        Assert-Trace ($stats[-1] -match "'D$die': '([0-9]+)' \(System.UInt32\)") "Missing or invalid counter D$die."
+        Assert-Trace ($stats[-1] -match "'D$die': '([0-9]+)' \(System.Int32\)") "Missing or invalid counter D$die."
         $count = [int]$Matches[1]
         $observed = @($rolls -match "'value': '$die'").Count
         Assert-Trace ($count -le $observed) "Counter D$die exceeds the observed rolls."
