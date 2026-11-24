@@ -12,6 +12,9 @@
 #include <sstream>
 #include <vector>
 #include <thread>
+#include <chrono>
+#include <condition_variable>
+#include <mutex>
 
 struct RealTimeConsumer::Data
 {
@@ -24,13 +27,31 @@ struct RealTimeConsumer::Data
 	EVENT_TRACE_LOGFILEW traceLog{};
 	TRACEHANDLE hprocess = INVALID_PROCESSTRACE_HANDLE;
 	std::thread hprocessWorker;
+	std::mutex hprocessStartupMutex;
+	std::condition_variable hprocessStartupCondition;
+	bool hprocessStartupComplete = false;
 
 	std::function<void(PEVENT_RECORD)> onTraceEvent;
 
 	static void WINAPI OnTraceEvent(PEVENT_RECORD EventRecord)
 	{
-		auto cb = static_cast<RealTimeConsumer::Data*>(EventRecord->UserContext)->onTraceEvent;
+		auto data = static_cast<RealTimeConsumer::Data*>(EventRecord->UserContext);
+		if (IsEqualGUID(EventRecord->EventHeader.ProviderId, data->sessionGuid))
+		{
+			data->CompleteStartup();
+			return;
+		}
+		auto cb = data->onTraceEvent;
 		if (cb) { cb(EventRecord); }
+	}
+
+	void CompleteStartup()
+	{
+		{
+			std::lock_guard lock{ hprocessStartupMutex };
+			hprocessStartupComplete = true;
+		}
+		hprocessStartupCondition.notify_one();
 	}
 };
 
@@ -90,16 +111,18 @@ RealTimeConsumer::RealTimeConsumer(const wchar_t* sessionName)
 	}
 
 	m_data->hprocessWorker = std::thread{
-		[hProcess = m_data->hprocess]
+		[data = m_data.get()]
 		{
-			TRACEHANDLE hTraceProcess = hProcess;
+			TRACEHANDLE hTraceProcess = data->hprocess;
 			if (hTraceProcess == INVALID_PROCESSTRACE_HANDLE)
 			{
 				std::cerr << "Failed to process trace session: invalid handle" << std::endl;
+				data->CompleteStartup();
 				return;
 			}
 			std::cout << "Start ProcessTrace..." << std::endl;
 			ULONG resl = ProcessTrace(&hTraceProcess, 1, nullptr, nullptr);
+			data->CompleteStartup();
 			std::cout << "End ProcessTrace." << std::endl;
 			if (resl != ERROR_SUCCESS)
 			{
@@ -110,8 +133,31 @@ RealTimeConsumer::RealTimeConsumer(const wchar_t* sessionName)
 	};
 
 	// Wait for ProcessTrace being started, before continuing here
-	// In this trivial example, otherwise `ProcessTrace` could be called after we already reached the dtor, which closes the trace session.
-	Sleep(10);
+	// Receive a private event before the session can stop, even if the worker starts late.
+	resl = TraceMessage(
+		m_data->handle,
+		TRACE_MESSAGE_GUID | TRACE_MESSAGE_TIMESTAMP,
+		&m_data->sessionGuid,
+		0,
+		nullptr,
+		size_t{ 0 });
+	if (resl != ERROR_SUCCESS)
+	{
+		std::cerr << "Failed to write trace startup event: " << resl << std::endl;
+		return;
+	}
+	resl = ControlTraceW(m_data->handle, m_data->sessionName.c_str(), m_data->sessionProperties, EVENT_TRACE_CONTROL_FLUSH);
+	if (resl != ERROR_SUCCESS)
+	{
+		std::cerr << "Failed to flush trace startup event: " << resl << std::endl;
+		return;
+	}
+	std::unique_lock lock{ m_data->hprocessStartupMutex };
+	if (!m_data->hprocessStartupCondition.wait_for(lock, std::chrono::seconds{ 5 },	[data = m_data.get()] { return data->hprocessStartupComplete; }))
+	{
+		std::cerr << "Timed out waiting for trace processing to start." << std::endl;
+		return;
+	}
 }
 
 RealTimeConsumer::~RealTimeConsumer()
